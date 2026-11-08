@@ -1,89 +1,181 @@
 # Miller TV
 
-A minimal app carousel for rooted LG webOS TVs, with remote navigation,
-editable app selections, a 24-hour clock and ISO date, animated bunny and giraffe
-companions, warm selection lighting, and optional local startup media.
+A minimal LG webOS app carousel with editable app selections, a 24-hour clock,
+ISO date, warm selection lighting, and animated bunny and giraffe companions.
+Optional local startup video can play behind the Miller logo.
 
-Developed for the older webOS 3.x JavaScript engine. Test compatibility on your
-own hardware; newer desktop browsers alone do not establish TV compatibility.
+## Screenshots
 
-## Build and preview
+Browser previews of the public source using the included generic desert
+background. No personal photo, device connection or private media was used.
+TV appearance and installed apps can differ.
 
-Requires a current Node.js runtime and `tar`; there are no npm runtime dependencies.
+![Carousel with generic desert background, bunny and giraffe](docs/images/carousel.jpg)
 
-```sh
+![App picker for showing or hiding applications](docs/images/app-picker.jpg)
+
+## Requirements
+
+- A rooted LG webOS TV with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel),
+  root status OK, and working root SSH access. This project does not root a TV;
+  check the [webOS Homebrew guide](https://www.webosbrew.org/rooting/) first.
+- Git, Node.js 22 or newer, `tar`, and OpenSSH (`ssh` and `scp`) on your computer.
+  Commands below use PowerShell from the repository directory. There are no npm
+  dependencies to install.
+- Your own authorized TV SSH key and an independently verified host-key record.
+  Do not disable host-key checking or publish the key.
+
+The validated target is an older OLED B7 running webOS 3.x. Other generations
+need their own compatibility checks. Developer Mode alone does not provide the
+root services used for app discovery, Home remapping or persistent startup.
+A browser preview does not establish compatibility with a TV's older engine.
+
+## 1. Clone, build and preview
+
+```powershell
+git clone https://github.com/miller-coffee/lg-webos-miller.git
+cd lg-webos-miller
 npm test
 npm run build
 npm run preview
 ```
 
-The generated IPK is written to `dist/`. The preview binds only to localhost.
-Use Up/Down or the remote wheel to browse, OK to launch, and Right for controls.
-`Edit apps` changes the launcher's app list without uninstalling applications.
+Open <http://127.0.0.1:8787/>. Ctrl+C stops the localhost-only preview server.
+Launching TV apps is unavailable in a desktop browser. The generated IPK is in
+`dist/`, using the version declared in `app/appinfo.json`.
 
-## Local customization
+| Control | Action |
+| --- | --- |
+| Up / Down or scroll wheel | Browse apps |
+| OK / Enter | Launch the selected app |
+| Right | Move to utility controls |
+| Left from the first utility control | Return to the carousel |
+| Edit apps | Choose which installed apps appear |
+| Save / Cancel | Apply / discard picker changes |
 
-The public background is an original abstract desert SVG. For a personal
-background, add `app/assets/background.local.png` locally. It is ignored by Git
-and layered above the default artwork. The build includes local customization
-files; do not publish your locally customized IPKs.
+The picker only changes launcher visibility; it never uninstalls apps. Choices
+and the last launched app are remembered locally. The bunny follows an active
+pointer and returns to the app names when pointer use ends.
 
-Startup movies are optional. Add your own H.264/AAC video at
-`app/assets/intro/startup.mp4`. Personal media, local manifests, generated
-packages, and development screenshots are excluded from version control.
+## 2. Configure your connection
 
-The sprite sheets and app icons are bundled for offline rendering. The Anton
-font's SIL Open Font License is included in `app/assets/fonts/OFL.txt`.
-Brand icons and third-party components retain their respective ownership.
+```powershell
+Copy-Item tv/device.example.json tv/device.json
+New-Item -ItemType Directory -Force .local | Out-Null
+```
 
-## TV connection and development
+Edit `tv/device.json`: replace `tv.example` with **your** TV's local hostname or
+address; keep `user` as `root`. The real configuration is ignored by Git.
 
-Copy `tv/device.example.json` to `tv/device.json`, then configure the TV hostname
-locally. The real configuration is ignored by Git. Keep the owner SSH key and
-verified host-key record in the ignored `.local/` directory; the helpers expect
-`tv_owner_ed25519` and `known_hosts` respectively. Never publish these files.
+Put your already-authorized private SSH key at `.local/tv_owner_ed25519` and its
+verified host-key record at `.local/known_hosts`. Use the Homebrew SSH setup for
+initial key provisioning. If your key has a passphrase, load it into your SSH
+agent first: these helpers use batch mode.
 
 ```powershell
 ./tools/tv.ps1 -RemoteCommand 'id; uptime'
-./tools/tv-debug.ps1 -Action Enable
-$env:MILLER_TV_DEBUG_ENDPOINT = 'http://127.0.0.1:19998'
-node tools/check-tv.mjs --carousel --interactions --editor
-./tools/tv-debug.ps1 -Action Disable
 ```
 
-Direct LAN access to the TV debugger must remain blocked. `tv/00-miller-debug`
-restricts TCP 9998 to loopback; debugging uses the authenticated, localhost-only
-SSH tunnel. Close the tunnel after every session, including failed validation.
-Verify IPv6 behavior separately if the firmware or debugger bind addresses change.
+Continue only when this reaches the intended TV and `id` reports root. If a host
+key changes, verify device identity before updating the pin.
 
-## Persistent startup
+## 3. Install and launch
 
-Homebrew Channel's legacy ActivityManager startup fix is required on affected
-older TVs. The upstream source commit, build command, target runtime and artifact
-hash are recorded in `tv/hbc-native-autostart-build.json`. Preserve that fix when
-maintaining Homebrew; the obsolete input-app workaround is not reliable.
+In PowerShell, prepare a connection and copy the built package:
 
-The persistent native Homebrew activity invokes its startup script, which runs
-`tv/50-miller` as an optional initialization hook. That hook initializes the Home
-mapping and starts the launcher and wake/key watchers. `tv/ensure-autostart.sh`
-restores Home settings and logs locally; it does not launch an input helper or
-require an EIM overlay. The provided key mapping targets the launcher from Home.
+```powershell
+$tvDevice = Get-Content tv/device.json -Raw | ConvertFrom-Json
+$tvTarget = $tvDevice.user + '@' + $tvDevice.host
+$sshArgs = @('-i', '.local/tv_owner_ed25519',
+    '-o', 'UserKnownHostsFile=.local/known_hosts',
+    '-o', 'StrictHostKeyChecking=yes', '-o', 'BatchMode=yes')
+$appInfo = Get-Content app/appinfo.json -Raw | ConvertFrom-Json
+$ipk = 'dist/' + $appInfo.id + '_' + $appInfo.version + '_all.ipk'
+scp -O @sshArgs $ipk "${tvTarget}:/tmp/miller-launcher.ipk"
+ssh @sshArgs $tvTarget
+```
 
-Create `/var/lib/webosbrew/miller-disabled` to bypass the optional Miller startup
-hook. Preserve and inspect your own backups before restoring any device settings.
-No firmware or kernel image is part of this repository.
+`-O` selects the legacy SCP protocol supported by older TVs. The last command
+opens a shell **on the TV**. Run this there:
 
-## Validation and privacy
+```sh
+luna-send -i -w 10000 luna://com.webos.appInstallService/dev/install '{"id":"org.miller.launcher","ipkUrl":"/tmp/miller-launcher.ipk","subscribe":true}'
+```
 
-`npm test` covers launcher navigation, app editing, intro behavior, animation
-control and package contents. `tools/check-tv.mjs` also compiles the application
-scripts in the actual legacy TV engine through the private tunnel.
+Wait for an update containing `"state":"installed"`; an initial accepted/queued
+response is not completion. Resolve any installer error before proceeding.
+Then launch the app and leave the TV shell:
 
-This repository contains a fresh public history. Device addresses, hardware
-identifiers, SSH fingerprints, personal photos, private startup media, diagnostic
-logs and local credentials are excluded. Loopback addresses in development tools
-are generic local endpoints, not device identifiers. Do not add private details
-to documentation, commits, screenshots or release artifacts.
+```sh
+luna-send -n 1 luna://com.webos.applicationManager/launch '{"id":"org.miller.launcher"}'
+exit
+```
 
-Run `npm run audit:public` to scan tracked files and all reachable Git history
-for common credentials, device identifiers, private files and image metadata.
+Open **Edit apps** on the TV, choose installed applications, and save. The bundled
+catalog is a fallback, not a promise that every listed app exists on your TV.
+To update, rebuild and repeat this install step.
+
+Installing the IPK alone does **not** change startup or the physical Home button.
+For those features, follow [the optional startup and Home setup](docs/startup.md)
+after the manual launcher works. That guide includes prerequisites, backups,
+hook installation, testing and recovery.
+
+## 4. Optional background and movie
+
+Add these locally **before** building, then rebuild and reinstall:
+
+| Local file | Purpose |
+| --- | --- |
+| `app/assets/background.local.png` | Personal background layered above the generic desert |
+| `app/assets/intro/startup.mp4` | H.264 video with AAC audio for the startup movie |
+
+The movie appears behind the M logo. Normal remote buttons skip it; volume and
+mute retain volume control. Preview your own movie at
+<http://127.0.0.1:8787/?intro=1> (browser-preview audio is muted).
+With no movie supplied, use the normal launcher preview.
+
+These files, local manifests, screenshots outside `docs/images/`, and generated
+packages are ignored by Git. Customized IPKs contain your media: do not upload
+them as public release assets.
+
+## Troubleshooting and development
+
+| Symptom | Check |
+| --- | --- |
+| Browser cannot launch apps | Expected; launching requires the TV |
+| SSH fails | TV awake, SSH enabled, local host, authorized key, agent and verified pin |
+| Install fails | Build output exists, SCP completed, installer output explains the failure |
+| Stuck on the M logo | Compile scripts in the real TV engine; modern browsers can miss legacy syntax errors |
+| Home opens LG's ribbon | Compatible Input Hook, injected library, key code and merged mapping; see [startup setup](docs/startup.md) |
+| Starts only after opening Homebrew | Homebrew native boot registration / legacy ActivityManager fix |
+| Movie absent | Local MP4 included before build, updated IPK installed, optional intro hook installed |
+
+Keep direct LAN debugger access blocked. `tv/00-miller-debug` restricts IPv4 TCP
+9998 to loopback; check IPv6 separately if the firmware binds it there.
+Use the authenticated localhost SSH tunnel for development and always close it:
+
+```powershell
+./tools/tv-debug.ps1 -Action Enable
+try {
+    $env:MILLER_TV_DEBUG_ENDPOINT = 'http://127.0.0.1:19998'
+    node tools/check-tv.mjs --carousel --interactions --editor
+} finally {
+    ./tools/tv-debug.ps1 -Action Disable
+}
+```
+
+The TV check compiles scripts in the actual legacy engine and exercises the UI.
+`npm test` checks navigation, app editing, intro behavior, companions and package
+contents. A clean checkout skips the private-video byte check because no movie
+is distributed. No firmware or kernel image is included.
+
+## Privacy and credits
+
+`npm run audit:public` checks tracked files and reachable Git history for common
+credentials, device identifiers, private files and image metadata. The README
+screenshots use public assets only. Keep `tv/device.json`, `.local/`, personal
+media, diagnostic logs and customized packages out of public commits. Loopback
+addresses in tools are generic endpoints, not device identifiers.
+
+Anton includes its SIL Open Font License at `app/assets/fonts/OFL.txt`.
+App icons and third-party components retain their respective ownership.
