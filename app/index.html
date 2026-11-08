@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=1920, initial-scale=1">
+  <title>Miller TV</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="screen">
+    <header><div class="brand"><span class="monogram">M</span><span>MILLER <b>TV</b></span></div><div class="time"><span id="clock"></span><span id="date"></span></div></header>
+    
+    <div id="app-scroll" aria-label="App carousel"><section id="apps" aria-label="Your apps"></section><span class="selection-tick" aria-hidden="true"></span></div>
+    <span id="app-position" aria-hidden="true"></span>
+    <div id="bunny" aria-hidden="true"><div class="bunny-jump"><div id="bunny-frame" class="bunny-art"></div></div></div>
+    <div id="giraffe" aria-hidden="true"><div id="giraffe-frame" class="giraffe-art"></div></div>
+    <nav id="tools" aria-label="TV controls"></nav>
+    <section id="app-editor" role="dialog" aria-modal="true" aria-labelledby="editor-heading" hidden>
+      <div class="editor-header"><h2 id="editor-heading">Your apps</h2><span id="editor-count"></span></div>
+      <p id="editor-status" role="status"></p><div id="editor-list"></div>
+      <nav id="editor-controls" aria-label="App selection controls"></nav>
+      <p class="editor-help">OK to show or hide an app &nbsp; &middot; &nbsp; Save to keep your changes &nbsp; &middot; &nbsp; Back to cancel</p>
+    </section>
+    <footer><span>Up / Down to browse <i>·</i> OK to launch <i>·</i> Right for controls</span><span class="quiet">A LITTLE LESS NOISE.</span></footer>
+    <div id="notice" role="status" aria-live="polite"></div>
+  </main>
+  <div id="splash"><video id="intro-video" preload="none" playsinline webkit-playsinline></video><div class="intro-shade"></div><div class="splash-content"><span class="splash-mark">M</span><h2>MILLER <b>TV</b></h2><p>MAKE ROOM FOR THE GOOD STUFF.</p></div></div>
+  <div id="easter" hidden><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><p>TRANSMISSION INTERCEPTED</p><h2>NO SIGNAL FROM<br>THE AD DEPARTMENT.</h2><span>Just you and the good stuff.</span></div>
+  <script src="apps.js"></script>
+  <script src="catalog.js"></script>
+  <script src="editor.js"></script>
+  <script src="intro.js"></script>
+  <script src="giraffe.js"></script>
+  <script src="launcher.js"></script>
+</body>
+</html>

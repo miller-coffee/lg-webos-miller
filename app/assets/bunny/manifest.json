@@ -1,0 +1,52 @@
+{
+  "columns": 8,
+  "rows": 8,
+  "cellSize": 192,
+  "scale": 0.8,
+  "states": {
+    "idle": {
+      "row": 0,
+      "frames": 8,
+      "fps": 4.291845493562231,
+      "frameDelayMs": 233
+    },
+    "dance": {
+      "row": 1,
+      "frames": 8,
+      "fps": 6.134969325153374,
+      "frameDelayMs": 163
+    },
+    "wave": {
+      "row": 2,
+      "frames": 8,
+      "fps": 6.134969325153374,
+      "frameDelayMs": 163
+    },
+    "hop": {
+      "row": 3,
+      "frames": 8,
+      "fps": 8.928571428571429,
+      "frameDelayMs": 112
+    },
+    "run": {
+      "row": 4,
+      "frames": 8,
+      "fps": 8.928571428571429,
+      "frameDelayMs": 112
+    },
+    "sleepy": {
+      "row": 5,
+      "frames": 8,
+      "fps": 4.901960784313726,
+      "frameDelayMs": 204
+    },
+    "carrot": {
+      "row": 6,
+      "frames": 16,
+      "fps": 5,
+      "frameDelayMs": 200,
+      "loop": false
+    }
+  },
+  "source": "bunny-generated-source.png"
+}

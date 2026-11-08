@@ -1,0 +1,21 @@
+{
+  "columns": 4,
+  "rows": 4,
+  "sourceWidth": 1254,
+  "sourceHeight": 1254,
+  "renderFrameSize": 240,
+  "states": {
+    "walk": {
+      "frames": 12,
+      "frameSeconds": 0.14
+    },
+    "idle": {
+      "start": 12,
+      "frames": 4,
+      "frameSeconds": 0.5
+    }
+  },
+  "art": "Original generated illustration inspired by user reference",
+  "generationTool": "Built-in image_gen",
+  "alpha": true
+}

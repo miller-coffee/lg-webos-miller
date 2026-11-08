@@ -1,0 +1,37 @@
+#!/bin/sh
+# Optional launcher/input initialization; never block Homebrew's boot sequence.
+(
+    if [ -e /var/lib/webosbrew/miller-disabled ]; then
+        exit 0
+    fi
+    if [ -r /var/lib/webosbrew/miller/ensure-autostart.sh ]; then
+        sh /var/lib/webosbrew/miller/ensure-autostart.sh
+    fi
+    hookdir=/media/developer/apps/usr/palm/services/org.webosbrew.inputhook.service/inputhook
+    attempts=0
+    while [ "$attempts" -lt 20 ]; do
+        input_pid=$(pidof lginput2 | awk '{print $1}')
+        [ -n "$input_pid" ] && break
+        attempts=$((attempts + 1))
+        sleep 1
+    done
+    # Match the catalog 1.4.0 service's PHP-hook invocation exactly.
+    cryptversion=1
+    [ -e /usr/lib/libcrypt.so.2 ] && cryptversion=2
+    if [ -n "$input_pid" ] && [ -x "$hookdir/ezinject" ] && [ -r "$hookdir/libcrypt$cryptversion/libphp.so" ]; then
+        if ! grep -qE '/libphp.so|/libinputhookpp.so' "/proc/$input_pid/maps"; then
+            "$hookdir/ezinject" "$input_pid" "$hookdir/libcrypt$cryptversion/libphp.so" "$hookdir/lginput-hook.php" lginput2 > /tmp/miller-home-inject.log 2>&1
+            echo "Input hook exit status: $?"
+        fi
+    fi
+    if [ -r /media/developer/apps/usr/palm/applications/org.miller.launcher/appinfo.json ]; then
+        if [ -r /var/lib/webosbrew/miller/start-intro.sh ]; then
+            sh /var/lib/webosbrew/miller/miller-watch.sh power > /tmp/miller-watch-power.log 2>&1 < /dev/null &
+            sh /var/lib/webosbrew/miller/miller-watch.sh keys > /tmp/miller-watch-keys.log 2>&1 < /dev/null &
+            sh /var/lib/webosbrew/miller/start-intro.sh
+        else
+            luna-send -n 1 -w 5000 luna://com.webos.applicationManager/launch '{"id":"org.miller.launcher"}'
+        fi
+    fi
+) > /tmp/miller-startup.log 2>&1 < /dev/null &
+exit 0

@@ -1,0 +1,11 @@
+{
+  "name": "miller-tv",
+  "version": "0.5.6",
+  "private": true,
+  "scripts": {
+    "audit:public": "node tools/audit-public.mjs",
+    "build": "node tools/package.mjs",
+    "preview": "node tools/preview.mjs",
+    "test": "node --test tests/launcher.test.mjs tests/giraffe.test.mjs tests/package.test.mjs"
+  }
+}

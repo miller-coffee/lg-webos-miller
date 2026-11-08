@@ -1,0 +1,10 @@
+#!/bin/sh
+# Keep the TV debugger reachable only locally, including through authenticated SSH forwarding.
+# Do not flush INPUT or change SSH, streaming, discovery, or other TV services.
+set -e
+iptables -N MILLER_DEBUG 2>/dev/null || iptables -S MILLER_DEBUG >/dev/null
+iptables -F MILLER_DEBUG
+iptables -A MILLER_DEBUG -i lo -j ACCEPT
+iptables -A MILLER_DEBUG -j DROP
+iptables -C INPUT -p tcp --dport 9998 -j MILLER_DEBUG 2>/dev/null ||
+    iptables -I INPUT 1 -p tcp --dport 9998 -j MILLER_DEBUG

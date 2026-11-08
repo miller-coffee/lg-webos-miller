@@ -1,0 +1,13 @@
+{
+  "sourceRepository": "https://github.com/webosbrew/webos-homebrew-channel",
+  "commit": "1a2b969e992617c9ba4b8a891542cb93a9e07b0a",
+  "upstreamFix": "https://github.com/webosbrew/webos-homebrew-channel/pull/230",
+  "serviceVersion": "0.7.3 + upstream legacy ActivityManager fix",
+  "build": "npm ci --ignore-scripts --force --no-audit --no-fund; npm run build-service -- --env production",
+  "target": "node0.10 (validated Node v0.12.2)",
+  "sha256": "d0dc77225d0d7df38aad18e8e2d151f81fde31957627b1128b86fee68ad488f0",
+  "originalSha256": "f5a68b70d7a883e675f19d80ef07e276b336b74ffa48adab548f4a6252a1d011",
+  "installedPath": "/media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/service.js",
+  "rollbackDirectory": "/var/lib/webosbrew/miller-backup/native-autostart-20261024",
+  "builtAt": "2026-10-24"
+}
